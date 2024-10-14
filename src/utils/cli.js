@@ -11,7 +11,10 @@ import {calculateHash} from '../commands/hash.js'
 import {compress, decompress} from '../commands/compression.js'
 
 export async function processCommand(input, currentDir) {
-  const [command, ...args] = input.trim().split(' ')
+  const args = input
+    .match(/(?:[^\s"]+|"[^"]*")+/g)
+    .map((arg) => arg.replace(/^"(.*)"$/, '$1'))
+  const command = args.shift()
 
   switch (command) {
     case 'up':
@@ -51,12 +54,16 @@ export async function processCommand(input, currentDir) {
       return calculateHash(args[0])
     case 'compress':
       if (args.length !== 2) {
-        throw new Error('Invalid input: compress requires source and destination paths');
+        throw new Error(
+          'Invalid input: compress requires source and destination paths'
+        )
       }
       return compress(args[0], args[1])
     case 'decompress':
       if (args.length !== 2) {
-        throw new Error('Invalid input: decompress requires source and destination paths');
+        throw new Error(
+          'Invalid input: decompress requires source and destination paths'
+        )
       }
       return decompress(args[0], args[1])
     default:

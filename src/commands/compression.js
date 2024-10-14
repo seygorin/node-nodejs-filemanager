@@ -38,17 +38,18 @@ export async function decompress(sourcePath, destPath) {
   try {
     await fs.access(sourcePath)
 
+    if (!sourcePath.endsWith('.br')) {
+      throw new Error('Source file must have a .br extension')
+    }
+
     const sourceFileName = basename(sourcePath)
-    const decompressedFileName = sourceFileName.endsWith('.br')
-      ? sourceFileName.slice(0, -3)
-      : `decompressed_${sourceFileName}`
+    const decompressedFileName = sourceFileName.slice(0, -3)
     const fullDestPath = join(destPath, decompressedFileName)
 
     try {
       await fs.access(destPath)
     } catch (error) {
-      console.error(`Destination directory does not exist: ${destPath}`)
-      throw new Error('Destination directory does not exist')
+      throw new Error(`Destination directory does not exist: ${destPath}`)
     }
 
     const readStream = createReadStream(sourcePath)
@@ -59,9 +60,6 @@ export async function decompress(sourcePath, destPath) {
     console.log(`File decompressed successfully: ${fullDestPath}`)
     return {success: true}
   } catch (error) {
-    console.error(`Decompression failed: ${error.message}`)
-    console.error(`Source path: ${sourcePath}`)
-    console.error(`Destination path: ${destPath}`)
     throw new Error(`Unable to decompress file: ${error.message}`)
   }
 }

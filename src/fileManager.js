@@ -10,12 +10,12 @@ export function fileManager(username) {
     output: process.stdout,
   });
 
-  console.log(`You are currently in ${currentDir}`);
+  console.log(`\nYou are currently in ${currentDir}`)
 
-  rl.on('line', async (input) => {
+  async function handleInput(input) {
     if (input.trim() === '.exit') {
-      rl.close();
-      return;
+      rl.close()
+      return
     }
 
     try {
@@ -24,16 +24,20 @@ export function fileManager(username) {
         currentDir = result.newDir;
       }
     } catch (error) {
-      if (error.message === 'Invalid input') {
-        console.error(`Invalid input: ${error.message}`);
+      if (error.message.startsWith('Invalid input')) {
+        console.error(`Invalid input: ${error.message}`)
+      } else if (error.message.startsWith('Operation failed')) {
+        console.error(`Operation failed: ${error.message}`)
       } else {
-        console.error(`Operation failed: ${error.message}`);
+        console.error(`Unexpected error: ${error.message}`)
       }
     }
 
-    console.log(`You are currently in ${currentDir}`);
+    console.log(`\nYou are currently in ${currentDir}`);
     rl.prompt();
-  });
+  };
+
+  rl.on('line', handleInput)
 
   rl.on('close', () => {
     console.log(`Thank you for using File Manager, ${username}, goodbye!`);

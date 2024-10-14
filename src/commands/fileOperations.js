@@ -5,11 +5,24 @@ import {pipeline} from 'stream/promises'
 
 export async function cat(path) {
   try {
-    const readStream = createReadStream(path)
-    await pipeline(readStream, process.stdout)
+    await fs.access(path, fs.constants.R_OK)
+
+    const stats = await fs.stat(path)
+    if (!stats.isFile()) {
+      throw new Error('The specified path is not a file')
+    }
+
+    const content = await fs.readFile(path, 'utf8')
+    console.log(content)
     return {success: true}
   } catch (error) {
-    throw new Error(`Unable to read file: ${error.message}`)
+    if (error.code === 'ENOENT') {
+      throw new Error(`File not found: ${path}`)
+    } else if (error.code === 'EACCES') {
+      throw new Error(`Permission denied: ${path}`)
+    } else {
+      throw new Error(`Unable to read file: ${error.message}`)
+    }
   }
 }
 
@@ -36,6 +49,7 @@ export async function rn(oldPath, newName) {
 
 export async function cp(sourcePath, destDir) {
   try {
+    await fs.access(destDir)
     const fileName = resolve(sourcePath).split('/').pop()
     const destPath = join(destDir, fileName)
     const readStream = createReadStream(sourcePath)
@@ -43,6 +57,9 @@ export async function cp(sourcePath, destDir) {
     await pipeline(readStream, writeStream)
     return {success: true}
   } catch (error) {
+    if (error.code === 'ENOENT') {
+      throw new Error(`Destination directory does not exist: ${destDir}`)
+    }
     throw new Error(`Unable to copy file: ${error.message}`)
   }
 }
