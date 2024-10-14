@@ -24,7 +24,7 @@ export async function processCommand(input, currentDir) {
     case 'ls':
       return ls(currentDir)
     case 'cat':
-      return cat(args[0])
+      return cat(currentDir, args[0])
     case 'add':
       return add(currentDir, args[0])
     case 'rn':

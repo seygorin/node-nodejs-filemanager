@@ -3,15 +3,16 @@ import {promises as fs} from 'fs'
 import {join, resolve} from 'path'
 import {pipeline} from 'stream/promises'
 
-export async function cat(path) {
+export async function cat(currentDir, path) {
+  const fullPath = resolve(currentDir, path)
   try {
-    await fs.access(path, fs.constants.R_OK)
-    const stats = await fs.stat(path)
+    await fs.access(fullPath, fs.constants.R_OK)
+    const stats = await fs.stat(fullPath)
     if (!stats.isFile()) {
       throw new Error('The specified path is not a file')
     }
 
-    const readStream = createReadStream(path, {encoding: 'utf8'})
+    const readStream = createReadStream(fullPath, {encoding: 'utf8'})
     await pipeline(readStream, async function* (source) {
       for await (const chunk of source) {
         console.log(chunk)
@@ -20,9 +21,9 @@ export async function cat(path) {
     return {success: true}
   } catch (error) {
     if (error.code === 'ENOENT') {
-      throw new Error(`File not found: ${path}`)
+      throw new Error(`File not found: ${fullPath}`)
     } else if (error.code === 'EACCES') {
-      throw new Error(`Permission denied: ${path}`)
+      throw new Error(`Permission denied: ${fullPath}`)
     } else {
       throw new Error(`Unable to read file: ${error.message}`)
     }
