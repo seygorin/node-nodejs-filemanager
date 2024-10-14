@@ -6,14 +6,17 @@ import {pipeline} from 'stream/promises'
 export async function cat(path) {
   try {
     await fs.access(path, fs.constants.R_OK)
-
     const stats = await fs.stat(path)
     if (!stats.isFile()) {
       throw new Error('The specified path is not a file')
     }
 
-    const content = await fs.readFile(path, 'utf8')
-    console.log(content)
+    const readStream = createReadStream(path, {encoding: 'utf8'})
+    await pipeline(readStream, async function* (source) {
+      for await (const chunk of source) {
+        console.log(chunk)
+      }
+    })
     return {success: true}
   } catch (error) {
     if (error.code === 'ENOENT') {
@@ -66,10 +69,25 @@ export async function cp(sourcePath, destDir) {
 
 export async function mv(sourcePath, destDir) {
   try {
-    await cp(sourcePath, destDir)
+    const fileName = resolve(sourcePath).split('/').pop()
+    const destPath = join(destDir, fileName)
+
+    await fs.access(sourcePath)
+    await fs.access(destDir)
+
+    const readStream = createReadStream(sourcePath)
+    const writeStream = createWriteStream(destPath)
+
+    await pipeline(readStream, writeStream)
+
     await fs.unlink(sourcePath)
+
+    console.log(`File moved successfully to: ${destPath}`)
     return {success: true}
   } catch (error) {
+    if (error.code === 'ENOENT') {
+      throw new Error(`Source file or destination directory does not exist`)
+    }
     throw new Error(`Unable to move file: ${error.message}`)
   }
 }
