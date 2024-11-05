@@ -1,0 +1,12 @@
+{
+  "name": "nodejs-filemanager",
+  "version": "1.0.0",
+  "description": "nodejs file manager cli by seygorin",
+  "main": "index.js",
+	"type": "module",
+	"scripts": {
+    "start": "node src/index.js"
+  },
+	"author": "seygorin",
+  "license": "ISC"
+}
